@@ -13,12 +13,18 @@ import processing.core.PApplet;
 public class DrawingSurface extends PApplet {
 
 	private Game board;
+	private int runCount;
+	private int speed;
+	private Point prevToggle;
 	
+	private final int MAX_SPEED = 480, MIN_SPEED = 15;
 	
 	
 	public DrawingSurface() throws FileNotFoundException {
-		board = new Game();
-		
+		board = new Game("life100.txt");
+		runCount = -1;
+		speed = 120;
+		prevToggle = null;
 	}
 	
 	// The statements in the setup() function 
@@ -37,7 +43,7 @@ public class DrawingSurface extends PApplet {
 		textAlign(LEFT);
 		textSize(12);
 		
-		/*text("Enter: Run 1 step\nSpace: Start/Stop\nUp arrow: Increase speed\nDown arrow: Decrease speed\n\nSpeed: " + (60.0/speed) + " per sec", height+20, 30);
+		text("Enter: Run 1 step\nSpace: Start/Stop\nUp arrow: Increase speed\nDown arrow: Decrease speed\n\nSpeed: " + (60.0/speed) + " per sec", height+20, 30);
 		
 		if (runCount == 0) {
 			board.step();
@@ -48,55 +54,55 @@ public class DrawingSurface extends PApplet {
 		
 		if (board != null) {
 			board.draw(this, 0, 0, height, height);
-		}*/
+		}
 		
-		String s = "";
-		if (board.lose()) {
-			s = "You lose! ";
-		} else if (board.win()) {
-			s = "You win!";
-		}
-		text(s, height + 20, 30);
-
-		if (board != null) {
-			board.draw(this, 0, 0, height, height);
-		}
-
 	}
-
 	
 	
+	public void mousePressed() {
+		if (mouseButton == LEFT) {
+			Point click = new Point(mouseX,mouseY);
+			float dimension = height;
+			Point cellCoord = board.clickToIndex(click,0,0,dimension,dimension);
+			if (cellCoord != null) {
+				board.toggleCell(cellCoord.x, cellCoord.y);
+				prevToggle = cellCoord;
+			}
+		} 
+	}
+	
+	
+	public void mouseDragged() {
+		if (mouseButton == LEFT) {
+			Point click = new Point(mouseX,mouseY);
+			float dimension = height;
+			Point cellCoord = board.clickToIndex(click,0,0,dimension,dimension);
+			if (cellCoord != null && !cellCoord.equals(prevToggle)) {
+				board.toggleCell(cellCoord.x, cellCoord.y);
+				prevToggle = cellCoord;
+			}
+		} 
+	}
 	
 	
 	public void keyPressed() {
-		if (board.lose()) {
-			if (keyCode == KeyEvent.VK_R) {
-				board = new Game();
-			}
-		} else if (board.win()) {
-			if (keyCode == KeyEvent.VK_R) {
-				board = new Game();
-			}
-		} else {
-		
-			if (keyCode == KeyEvent.VK_UP) {
-				board.step(0);
-			} else if (keyCode == KeyEvent.VK_DOWN) {
-				board.step(2);
-			} else if (keyCode == KeyEvent.VK_LEFT) {
-				board.step(3);
-			} else if (keyCode == KeyEvent.VK_RIGHT) {
-				board.step(1);
-			} else if (keyCode == KeyEvent.VK_SPACE) {
-				board.randomize();
-			}
+		if (keyCode == KeyEvent.VK_SPACE) {
+			if (runCount >= 0)
+				runCount = -1;
+			else
+				runCount = 0;
+		} else if (keyCode == KeyEvent.VK_DOWN) {
+			speed = Math.min(MAX_SPEED, speed*2);
+		} else if (keyCode == KeyEvent.VK_UP) {
+			speed = Math.max(MIN_SPEED, speed/2);
+			runCount = Math.min(runCount, speed);
+		} else if (keyCode == KeyEvent.VK_ENTER) {
+			board.step();
 		}
 	}
 
-}
-
 	
-
+}
 
 
 
